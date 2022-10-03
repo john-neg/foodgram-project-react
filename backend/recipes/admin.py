@@ -11,7 +11,10 @@ class MeasureUnitsAdmin(admin.ModelAdmin):
 @admin.register(Ingredients)
 class IngredientsAdmin(admin.ModelAdmin):
     model = Ingredients
-    list_display = ("name", "measurement_unit")
+    list_display = (
+        "name",
+        "measurement_unit",
+    )
     empty_value_display = "-отсутствует-"
     search_fields = ("name",)
     list_filter = ("measurement_unit",)
@@ -38,5 +41,9 @@ class RecipesAdmin(admin.ModelAdmin):
 @admin.register(Tags)
 class TagsAdmin(admin.ModelAdmin):
     model = Tags
-    list_display = ("name", "color", "slug")
+    list_display = (
+        "name",
+        "color",
+        "slug",
+    )
     search_fields = ("name",)
