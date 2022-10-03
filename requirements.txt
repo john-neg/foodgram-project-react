@@ -1,1 +1,5 @@
-Django~=2.2.28
+python-dotenv==0.21.0
+Django==2.2.28
+djangorestframework==3.12.4
+Pillow==9.2.0
+djoser==2.1.0
