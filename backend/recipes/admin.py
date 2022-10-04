@@ -1,6 +1,15 @@
 from django.contrib import admin
 
-from .models import Tags, Ingredients, Recipes, MeasureUnits
+from .models import (
+    Tags,
+    Ingredients,
+    Recipes,
+    MeasureUnits,
+    RecipeTags,
+    RecipeIngredients,
+    Wishlist,
+    Cart,
+)
 
 
 @admin.register(MeasureUnits)
@@ -11,39 +20,43 @@ class MeasureUnitsAdmin(admin.ModelAdmin):
 @admin.register(Ingredients)
 class IngredientsAdmin(admin.ModelAdmin):
     model = Ingredients
-    list_display = (
-        "name",
-        "measurement_unit",
-    )
-    empty_value_display = "-отсутствует-"
-    search_fields = ("name",)
-    list_filter = ("measurement_unit",)
+    list_display = ("name", "measurement_unit")
+    list_filter = ("name",)
     list_editable = ("measurement_unit",)
+    empty_value_display = "-отсутствует-"
 
 
 @admin.register(Recipes)
 class RecipesAdmin(admin.ModelAdmin):
+    class TagsInline(admin.TabularInline):
+        model = RecipeTags
+        extra = 1
+
+    class IngredientsInline(admin.TabularInline):
+        model = RecipeIngredients
+        extra = 1
+
     model = Recipes
-    list_display = (
-        "name",
-        "author",
-        "image",
-        "text",
-        "cooking_time",
-    )
-    empty_value_display = "-отсутствует-"
+    inlines = (TagsInline, IngredientsInline)
+    list_display = ("name", "author")
     search_fields = ("name",)
-    list_editable = ("text", "cooking_time")
-    list_filter = ("author",)
-    filter_horizontal = ("ingredients", "tags")
+    list_filter = ("author", "name", "tags")
+    filter_horizontal = ("tags",)
+    empty_value_display = "-отсутствует-"
 
 
 @admin.register(Tags)
 class TagsAdmin(admin.ModelAdmin):
     model = Tags
-    list_display = (
-        "name",
-        "color",
-        "slug",
-    )
+    list_display = ("name", "color", "slug")
     search_fields = ("name",)
+
+
+@admin.register(Wishlist)
+class WishlistAdmin(admin.ModelAdmin):
+    model = Wishlist
+
+
+@admin.register(Cart)
+class CartAdmin(admin.ModelAdmin):
+    model = Cart
