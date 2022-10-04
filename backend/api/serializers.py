@@ -3,7 +3,8 @@ import base64
 from django.core.files.base import ContentFile
 from rest_framework import serializers
 
-from recipes.models import Ingredients, Tags
+from recipes.models import Ingredients, Tags, Recipes, MeasureUnits, Wishlist, Cart
+from users.serializers import CustomUserSerializer
 
 
 class TagsSerializer(serializers.ModelSerializer):
@@ -14,23 +15,55 @@ class TagsSerializer(serializers.ModelSerializer):
         fields = ("id", "name", "color", "slug")
 
 
-class RecipeSerializer(serializers.ModelSerializer):
-    """Сериализатор для модели Tags."""
+class IngredientsSerializer(serializers.ModelSerializer):
+    """Сериализатор для модели Ingredients."""
+
+    measurement_unit = serializers.CharField(source="measurement_unit.name")
 
     class Meta:
-        model = Tags
-        fields = ("id", "name", "color", "slug")
+        model = Ingredients
+        fields = ("id", "name", "measurement_unit")
 
-# class Hex2NameColor(serializers.Field):
-#     def to_representation(self, value):
-#         return value
-#
-#     def to_internal_value(self, data):
-#         try:
-#             data = webcolors.hex_to_name(data)
-#         except ValueError:
-#             raise serializers.ValidationError('Для этого цвета нет имени')
-#         return data
+
+class RecipesSerializer(serializers.ModelSerializer):
+    """Сериализатор для модели Recipes."""
+
+    is_favorited = serializers.SerializerMethodField(read_only=True)
+    is_in_shopping_cart = serializers.SerializerMethodField(read_only=True)
+    tags = TagsSerializer(many=True, read_only=True)
+    author = CustomUserSerializer(read_only=True)
+    ingredients = IngredientsSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Recipes
+        fields = (
+            "id",
+            "tags",
+            "author",
+            "ingredients",
+            "is_favorited",
+            "is_in_shopping_cart",
+            "name",
+            "image",
+            "text",
+            "cooking_time",
+        )
+
+    def get_is_favorited(self, obj):
+        """Проверяет, содержится ли данный рецепт в списке избранного."""
+
+        user = self.context.get("request").user
+        if user.is_anonymous:
+            return False
+        return Wishlist.objects.filter(user_id=user.id, recipe_id=obj.id).exists()
+
+    def get_is_in_shopping_cart(self, obj):
+        """Проверяет, содержится ли данный рецепт в списке покупок."""
+
+        user = self.context.get("request").user
+        if user.is_anonymous:
+            return False
+        return Cart.objects.filter(user_id=user.id, recipe_id=obj.id).exists()
 
 
 class Base64ImageField(serializers.ImageField):
@@ -41,11 +74,3 @@ class Base64ImageField(serializers.ImageField):
             data = ContentFile(base64.b64decode(img_str), name="temp." + ext)
 
         return super().to_internal_value(data)
-
-
-class IngredientsSerializer(serializers.ModelSerializer):
-    ingredient_name = serializers.CharField(source="name")
-
-    class Meta:
-        model = Ingredients
-        fields = ("id", "ingredient_name")
