@@ -55,8 +55,14 @@ class TagsAdmin(admin.ModelAdmin):
 @admin.register(Wishlist)
 class WishlistAdmin(admin.ModelAdmin):
     model = Wishlist
+    list_display = ("id", "user", "recipe")
+    search_fields = ("user", "recipe")
+    list_filter = ("user", "recipe")
 
 
 @admin.register(Cart)
 class CartAdmin(admin.ModelAdmin):
     model = Cart
+    list_display = ("id", "user", "recipe")
+    search_fields = ("user", "recipe")
+    list_filter = ("user", "recipe")

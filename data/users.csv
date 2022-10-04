@@ -1,0 +1,7 @@
+id,username,email,first_name,last_name,password,is_active,is_staff,is_superuser
+1,admin,admin@admin.ru,Админ,Админов,admin,1,1,1
+100,bingobongo,bingobongo@foodgram.fake,Иван,Иванов,bingobongo,1,0,0
+101,capt_obvious,capt_obvious@foodgram.fake,Сергей,Петрова,capt_obvious,1,0,0
+102,faust,faust@foodgram.fake,Петр,Сергеев,faust,1,0,0
+103,reviewer,reviewer@foodgram.fake,Анна,Петрова,reviewer,1,0,0
+104,angry,angry@foodgram.fake,Татьяна,Иванова,angry,0,0,0

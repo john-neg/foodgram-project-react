@@ -49,6 +49,7 @@ class CustomUserSerializer(UserSerializer):
         )
 
     def get_is_subscribed(self, obj):
+        """Проверяет подписан ли текущий пользователь на другого."""
         user = self.context.get("request").user
         if user.is_anonymous:
             return False
@@ -91,5 +92,5 @@ class FollowSerializer(CustomUserSerializer):
         recipes = obj.recipes.all()
         recipes_limit = request.query_params.get("recipes_limit")
         if recipes_limit:
-            recipes = recipes[:int(recipes_limit)]
+            recipes = recipes[: int(recipes_limit)]
         return ShortRecipeSerializer(recipes, many=True).data

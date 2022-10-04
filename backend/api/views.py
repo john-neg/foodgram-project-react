@@ -1,12 +1,17 @@
 from django.contrib.auth import get_user_model
-from django.shortcuts import get_object_or_404
-from rest_framework import viewsets, status
-from rest_framework.decorators import action
-from rest_framework.response import Response
+from rest_framework import viewsets
 
-from api.serializers import UserSerializer
+from api.serializers import TagsSerializer
+from recipes.models import Tags
 
 User = get_user_model()
+
+
+class TagsViewSet(viewsets.ReadOnlyModelViewSet):
+    """View класс для модели Tags."""
+
+    queryset = Tags.objects.all()
+    serializer_class = TagsSerializer
 
 
 # class UsersViewSet(viewsets.ModelViewSet):
