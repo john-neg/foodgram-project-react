@@ -2,9 +2,24 @@ import base64
 
 from django.core.files.base import ContentFile
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
+from rest_framework.generics import get_object_or_404
 
-from recipes.models import Ingredients, Tags, Recipes, Wishlist, Cart
+from recipes.models import (Cart, Ingredients, RecipeIngredients, Recipes,
+                            Tags, Wishlist)
 from users.serializers import CustomUserSerializer
+
+
+class Base64ImageField(serializers.ImageField):
+    """Сериализатор для изображений."""
+
+    def to_internal_value(self, data):
+        if isinstance(data, str) and data.startswith("data:image"):
+            img_format, img_str = data.split(";base64,")
+            ext = img_format.split("/")[-1]
+            data = ContentFile(base64.b64decode(img_str), name="temp." + ext)
+
+        return super().to_internal_value(data)
 
 
 class TagsSerializer(serializers.ModelSerializer):
@@ -25,14 +40,29 @@ class IngredientsSerializer(serializers.ModelSerializer):
         fields = ("id", "name", "measurement_unit")
 
 
+class RecipeIngredientsSerializer(serializers.ModelSerializer):
+    """Сериализатор для модели RecipeIngredients."""
+
+    id = serializers.ReadOnlyField(source="ingredient.id")
+    name = serializers.ReadOnlyField(source="ingredient.name")
+    measurement_unit = serializers.ReadOnlyField(
+        source="ingredient.measurement_unit.name",
+    )
+
+    class Meta:
+        model = RecipeIngredients
+        fields = ("id", "name", "measurement_unit", "amount")
+
+
 class RecipesSerializer(serializers.ModelSerializer):
     """Сериализатор для модели Recipes."""
 
-    is_favorited = serializers.SerializerMethodField(read_only=True)
-    is_in_shopping_cart = serializers.SerializerMethodField(read_only=True)
     tags = TagsSerializer(many=True, read_only=True)
     author = CustomUserSerializer(read_only=True)
-    ingredients = IngredientsSerializer(many=True, read_only=True)
+    ingredients = serializers.SerializerMethodField(read_only=True)
+    is_favorited = serializers.SerializerMethodField(read_only=True)
+    is_in_shopping_cart = serializers.SerializerMethodField(read_only=True)
+    image = Base64ImageField()
 
     class Meta:
         model = Recipes
@@ -48,6 +78,17 @@ class RecipesSerializer(serializers.ModelSerializer):
             "text",
             "cooking_time",
         )
+        read_only_fields = (
+            "is_favorite",
+            "is_shopping_cart",
+        )
+
+    @staticmethod
+    def get_ingredients(obj):
+        """Получает список ингредиентов с количеством."""
+
+        queryset = RecipeIngredients.objects.filter(recipe=obj)
+        return RecipeIngredientsSerializer(queryset, many=True).data
 
     def get_is_favorited(self, obj):
         """Проверяет, содержится ли данный рецепт в списке избранного."""
@@ -55,7 +96,10 @@ class RecipesSerializer(serializers.ModelSerializer):
         user = self.context.get("request").user
         if user.is_anonymous:
             return False
-        return Wishlist.objects.filter(user_id=user.id, recipe_id=obj.id).exists()
+        return Wishlist.objects.filter(
+            user_id=user.id,
+            recipe_id=obj.id,
+        ).exists()
 
     def get_is_in_shopping_cart(self, obj):
         """Проверяет, содержится ли данный рецепт в списке покупок."""
@@ -65,12 +109,60 @@ class RecipesSerializer(serializers.ModelSerializer):
             return False
         return Cart.objects.filter(user_id=user.id, recipe_id=obj.id).exists()
 
+    def validate(self, data):
+        """Проверяет данные для создания и редактирования рецепта."""
 
-class Base64ImageField(serializers.ImageField):
-    def to_internal_value(self, data):
-        if isinstance(data, str) and data.startswith("data:image"):
-            img_format, img_str = data.split(";base64,")
-            ext = img_format.split("/")[-1]
-            data = ContentFile(base64.b64decode(img_str), name="temp." + ext)
+        name = self.initial_data.get("name").strip()
+        tags = self.initial_data.get("tags")
+        ingredients = self.initial_data.get("ingredients")
 
-        return super().to_internal_value(data)
+        for parameter in (tags, ingredients):
+            if not (parameter, isinstance(parameter, list)):
+                raise ValidationError(
+                    f"Параметр '{parameter}' не является списком (list)"
+                )
+
+        for tag in tags:
+            if not Tags.objects.filter(id=tag):
+                raise ValidationError(f"Тег {tag} не существует")
+
+        checked_ingredients = []
+        for ingredient in ingredients:
+            if not Ingredients.objects.filter(id=ingredient.get("id")):
+                raise ValidationError(
+                    f"Ингредиент с 'id' {ingredient.get('id')} не существует"
+                )
+            amount = ingredient.get("amount")
+            if not str(amount).isdecimal() or int(amount) <= 0:
+                raise ValidationError(
+                    f"Значение amount - '{ingredient.get('amount')}' "
+                    "должно быть положительным числом"
+                )
+            checked_ingredients.append(
+                {"id": ingredient.get("id"), "amount": amount}
+            )
+
+        data["name"] = name.capitalize()
+        data["tags"] = tags
+        data["ingredients"] = ingredients
+        data["author"] = self.context.get("request").user
+        return data
+
+    def create(self, validated_data):
+        """Создает рецепт."""
+
+        image = validated_data.pop("image")
+        tags = validated_data.pop("tags")
+        ingredients = validated_data.pop("ingredients")
+        recipe = Recipes.objects.create(image=image, **validated_data)
+        recipe.tags.set(tags)
+        for ingredient in ingredients:
+            RecipeIngredients.objects.get_or_create(
+                recipe=recipe,
+                ingredient=get_object_or_404(Ingredients, pk=ingredient["id"]),
+                amount=ingredient.get("amount"),
+            )
+        return recipe
+
+    def update(self, instance, validated_data):
+        """Редактирует рецепт."""

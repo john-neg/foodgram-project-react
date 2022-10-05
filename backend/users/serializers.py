@@ -2,6 +2,7 @@ from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework import serializers
 
 from recipes.models import Recipes
+
 from .models import Follow, User
 
 
@@ -33,7 +34,7 @@ class CustomUserCreateSerializer(UserCreateSerializer):
 
 
 class CustomUserSerializer(UserSerializer):
-    """Сериализатор для пользователя."""
+    """Сериализатор для отображения информации о пользователе."""
 
     is_subscribed = serializers.SerializerMethodField(read_only=True)
 

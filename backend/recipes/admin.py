@@ -1,15 +1,7 @@
 from django.contrib import admin
 
-from .models import (
-    Tags,
-    Ingredients,
-    Recipes,
-    MeasureUnits,
-    RecipeTags,
-    RecipeIngredients,
-    Wishlist,
-    Cart,
-)
+from .models import (Cart, Ingredients, MeasureUnits, RecipeIngredients,
+                     Recipes, RecipeTags, Tags, Wishlist)
 
 
 @admin.register(MeasureUnits)

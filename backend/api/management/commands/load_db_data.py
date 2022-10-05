@@ -3,8 +3,8 @@ import csv
 from django.core.management import BaseCommand
 from django.shortcuts import get_object_or_404
 
-from recipes.models import Ingredients, Recipes, MeasureUnits, Tags
-from users.models import User, Follow
+from recipes.models import Ingredients, MeasureUnits, Tags
+from users.models import Follow, User
 
 
 class Command(BaseCommand):
@@ -16,7 +16,7 @@ class Command(BaseCommand):
             reader = csv.reader(file)
             next(reader)
             User.objects.all().delete()
-            print(f"Загружаю данные в Users")
+            print("Загружаю данные в Users")
             for row in reader:
                 user = User(
                     id=row[0],
@@ -35,7 +35,7 @@ class Command(BaseCommand):
             reader = csv.reader(file)
             next(reader)
             Follow.objects.all().delete()
-            print(f"Загружаю данные в Follow")
+            print("Загружаю данные в Follow")
             for row in reader:
                 follow = Follow(
                     id=row[0],
@@ -48,7 +48,7 @@ class Command(BaseCommand):
             reader = csv.reader(file)
             Ingredients.objects.all().delete()
             MeasureUnits.objects.all().delete()
-            print(f"Загружаю данные в Ingredients и MeasureUnits")
+            print("Загружаю данные в Ingredients и MeasureUnits")
             for row in reader:
                 measurement_unit, _ = MeasureUnits.objects.get_or_create(
                     name=row[-1],
@@ -62,7 +62,7 @@ class Command(BaseCommand):
             reader = csv.reader(file)
             next(reader)
             Tags.objects.all().delete()
-            print(f"Загружаю данные в Tags")
+            print("Загружаю данные в Tags")
             for row in reader:
                 tag = Tags(
                     id=row[0],

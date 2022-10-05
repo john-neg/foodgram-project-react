@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from api.pagination import CustomPageNumberPagination
+
 from .models import Follow, User
 from .serializers import CustomUserSerializer, FollowSerializer
 
@@ -33,7 +34,10 @@ class FollowViewSet(APIView):
                 {"error": "Нельзя подписаться на самого себя"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        if Follow.objects.filter(user=request.user, author_id=user_id).exists():
+        if Follow.objects.filter(
+            user=request.user,
+            author_id=user_id,
+        ).exists():
             return Response(
                 {"error": "Вы уже подписаны на этого пользователя"},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -48,7 +52,10 @@ class FollowViewSet(APIView):
     def delete(self, request, *args, **kwargs):
         user_id = self.kwargs.get("user_id")
         get_object_or_404(User, id=user_id)
-        subscription = Follow.objects.filter(user=request.user, author_id=user_id)
+        subscription = Follow.objects.filter(
+            user=request.user,
+            author_id=user_id,
+        )
         if subscription:
             subscription.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)

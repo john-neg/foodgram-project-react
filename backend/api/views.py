@@ -1,14 +1,13 @@
-from django.contrib.auth import get_user_model
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import viewsets, filters
+from rest_framework import viewsets
+
+from recipes.models import Ingredients, Recipes, Tags
 
 from .filters import IngredientsSearchFilter, RecipesFilter
 from .pagination import CustomPageNumberPagination
 from .permissions import AdminOrAuthorOrReadOnly
-from .serializers import TagsSerializer, IngredientsSerializer, RecipesSerializer
-from recipes.models import Tags, Ingredients, Recipes
-
-User = get_user_model()
+from .serializers import (IngredientsSerializer, RecipesSerializer,
+                          TagsSerializer)
 
 
 class TagsViewSet(viewsets.ReadOnlyModelViewSet):
