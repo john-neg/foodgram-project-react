@@ -148,6 +148,24 @@ class RecipesSerializer(serializers.ModelSerializer):
         data["author"] = self.context.get("request").user
         return data
 
+    @staticmethod
+    def create_tags(tags, recipe):
+        """Создает связь между тегами и рецептом."""
+
+        for tag in tags:
+            recipe.tags.add(tag)
+
+    @staticmethod
+    def create_ingredients(ingredients, recipe):
+        """Создает связь между ингредиентами и рецептом."""
+
+        for ingredient in ingredients:
+            RecipeIngredients.objects.get_or_create(
+                recipe=recipe,
+                ingredient=get_object_or_404(Ingredients, pk=ingredient["id"]),
+                amount=ingredient.get("amount"),
+            )
+
     def create(self, validated_data):
         """Создает рецепт."""
 
@@ -156,13 +174,14 @@ class RecipesSerializer(serializers.ModelSerializer):
         ingredients = validated_data.pop("ingredients")
         recipe = Recipes.objects.create(image=image, **validated_data)
         recipe.tags.set(tags)
-        for ingredient in ingredients:
-            RecipeIngredients.objects.get_or_create(
-                recipe=recipe,
-                ingredient=get_object_or_404(Ingredients, pk=ingredient["id"]),
-                amount=ingredient.get("amount"),
-            )
+        self.create_ingredients(ingredients, recipe)
         return recipe
 
     def update(self, instance, validated_data):
         """Редактирует рецепт."""
+
+        instance.tags.clear()
+        RecipeIngredients.objects.filter(recipe=instance).delete()
+        self.create_tags(validated_data.pop('tags'), instance)
+        self.create_ingredients(validated_data.pop('ingredients'), instance)
+        return super().update(instance, validated_data)
