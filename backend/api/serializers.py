@@ -182,6 +182,54 @@ class RecipesSerializer(serializers.ModelSerializer):
 
         instance.tags.clear()
         RecipeIngredients.objects.filter(recipe=instance).delete()
-        self.create_tags(validated_data.pop('tags'), instance)
-        self.create_ingredients(validated_data.pop('ingredients'), instance)
+        self.create_tags(validated_data.pop("tags"), instance)
+        self.create_ingredients(validated_data.pop("ingredients"), instance)
         return super().update(instance, validated_data)
+
+
+class RecipesShortSerializer(RecipesSerializer):
+    """Сериализатор для модели Recipes."""
+
+    class Meta:
+        model = Recipes
+        fields = (
+            "id",
+            "name",
+            "image",
+            "cooking_time",
+        )
+        read_only_fields = ("__all__",)
+
+
+class WishlistSerializer(serializers.ModelSerializer):
+    """Сериализатор для модели Wishlist."""
+
+    class Meta:
+        model = Wishlist
+        fields = ("id", "user", "recipe")
+
+    def validate(self, data):
+        user = self.context["request"].user
+        recipe = data.get("wishlist_recipe")
+        if Wishlist.objects.filter(user_id=user.id, recipe_id=recipe).exists():
+            raise serializers.ValidationError(
+                "Данный рецепт уже добавлен в избранное"
+            )
+        return data
+
+
+class CartSerializer(serializers.ModelSerializer):
+    """Сериализатор для модели Cart."""
+
+    class Meta:
+        model = Cart
+        fields = ("id", "user", "recipe")
+
+    def validate(self, data):
+        user = self.context["request"].user
+        recipe = data.get("cart_recipe")
+        if Cart.objects.filter(user_id=user.id, recipe_id=recipe).exists():
+            raise serializers.ValidationError(
+                "Данный рецепт уже добавлен в корзину"
+            )
+        return data

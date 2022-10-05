@@ -1,25 +1,31 @@
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import viewsets
+from rest_framework import status
+from rest_framework.decorators import action
+from rest_framework.generics import get_object_or_404
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
-from recipes.models import Ingredients, Recipes, Tags
+from recipes.models import Cart, Ingredients, Recipes, Tags, Wishlist
 
 from .filters import IngredientsSearchFilter, RecipesFilter
 from .pagination import CustomPageNumberPagination
 from .permissions import AdminOrAuthorOrReadOnly
-from .serializers import (IngredientsSerializer, RecipesSerializer,
-                          TagsSerializer)
+from .serializers import (CartSerializer, IngredientsSerializer,
+                          RecipesSerializer, TagsSerializer,
+                          WishlistSerializer)
 
 
-class TagsViewSet(viewsets.ReadOnlyModelViewSet):
-    """View класс для модели Tags."""
+class TagsViewSet(ReadOnlyModelViewSet):
+    """Viewset для модели Tags."""
 
     queryset = Tags.objects.all()
     serializer_class = TagsSerializer
     pagination_class = None
 
 
-class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
-    """View класс для модели Ingredients."""
+class IngredientsViewSet(ReadOnlyModelViewSet):
+    """Viewset для модели Ingredients."""
 
     queryset = Ingredients.objects.all()
     serializer_class = IngredientsSerializer
@@ -28,8 +34,8 @@ class IngredientsViewSet(viewsets.ReadOnlyModelViewSet):
     pagination_class = None
 
 
-class RecipesViewSet(viewsets.ModelViewSet):
-    """View класс для модели Recipes."""
+class RecipesViewSet(ModelViewSet):
+    """Viewset для модели Recipes."""
 
     queryset = Recipes.objects.all()
     serializer_class = RecipesSerializer
@@ -37,3 +43,53 @@ class RecipesViewSet(viewsets.ModelViewSet):
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipesFilter
     pagination_class = CustomPageNumberPagination
+
+    @staticmethod
+    def post_method_for_actions(request, pk, serializers):
+        data = {"user": request.user.id, "recipe": pk}
+        serializer = serializers(data=data, context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @staticmethod
+    def delete_method_for_actions(request, pk, model):
+        user = request.user
+        recipe = get_object_or_404(Recipes, id=pk)
+        model_obj = get_object_or_404(model, user=user, recipe=recipe)
+        model_obj.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(
+        detail=True,
+        methods=["POST"],
+        permission_classes=(IsAuthenticated,),
+    )
+    def favorite(self, request, pk):
+        return self.post_method_for_actions(
+            request=request, pk=pk, serializers=WishlistSerializer
+        )
+
+    @favorite.mapping.delete
+    def delete_favorite(self, request, pk):
+        return self.delete_method_for_actions(
+            request=request, pk=pk, model=Wishlist
+        )
+
+    @action(
+        detail=True,
+        methods=["POST"],
+        permission_classes=(IsAuthenticated,),
+    )
+    def shopping_cart(self, request, pk):
+        return self.post_method_for_actions(
+            request=request, pk=pk, serializers=CartSerializer
+        )
+
+    @shopping_cart.mapping.delete
+    def delete_shopping_cart(self, request, pk):
+        return self.delete_method_for_actions(
+            request=request,
+            pk=pk,
+            model=Cart,
+        )
