@@ -8,8 +8,9 @@ from rest_framework.response import Response
 from rest_framework.status import HTTP_400_BAD_REQUEST
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
-from ..recipes.models import (Cart, Ingredients, RecipeIngredients, Recipes,
-                              Tags, Wishlist)
+from recipes.models import (Cart, Ingredients, RecipeIngredients, Recipes,
+                            Tags, Wishlist)
+
 from .filters import IngredientsSearchFilter, RecipesFilter
 from .pagination import CustomPageNumberPagination
 from .permissions import AdminOrAuthorOrReadOnly
