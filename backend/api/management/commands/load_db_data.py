@@ -16,7 +16,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
-        with open("../backend/data/users.csv") as file:
+        with open("data/users.csv") as file:
             reader = csv.reader(file, delimiter=";")
             next(reader)
             User.objects.all().delete()
@@ -35,7 +35,7 @@ class Command(BaseCommand):
                 user.set_password(row[5])
                 user.save()
 
-        with open("../backend/data/follow.csv") as file:
+        with open("data/follow.csv") as file:
             reader = csv.reader(file, delimiter=";")
             next(reader)
             Follow.objects.all().delete()
@@ -48,7 +48,7 @@ class Command(BaseCommand):
                 )
                 follow.save()
 
-        with open("../backend/data/ingredients.csv") as file:
+        with open("data/ingredients.csv") as file:
             reader = csv.reader(file)
             Ingredients.objects.all().delete()
             MeasureUnits.objects.all().delete()
@@ -64,7 +64,7 @@ class Command(BaseCommand):
                 )
                 ingredient.save()
 
-        with open("../backend/data/tags.csv") as file:
+        with open("data/tags.csv") as file:
             reader = csv.reader(file, delimiter=";")
             next(reader)
             Tags.objects.all().delete()
@@ -78,7 +78,7 @@ class Command(BaseCommand):
                 )
                 tag.save()
 
-        with open("../backend/data/recipes.csv") as file:
+        with open("data/recipes.csv") as file:
             reader = csv.reader(file, delimiter=";")
             next(reader)
             Recipes.objects.all().delete()
@@ -96,11 +96,11 @@ class Command(BaseCommand):
 
         shutil.rmtree(settings.MEDIA_ROOT + "/images", ignore_errors=True)
         shutil.copytree(
-            "../backend/data/images/",
+            "data/images/",
             settings.MEDIA_ROOT + "/images",
         )
 
-        with open("../backend/data/recipetags.csv") as file:
+        with open("data/recipetags.csv") as file:
             reader = csv.reader(file, delimiter=";")
             next(reader)
             RecipeTags.objects.all().delete()
@@ -113,7 +113,7 @@ class Command(BaseCommand):
                 )
                 tags.save()
 
-        with open("../backend/data/recipeingredients.csv") as file:
+        with open("data/recipeingredients.csv") as file:
             reader = csv.reader(file, delimiter=";")
             next(reader)
             RecipeIngredients.objects.all().delete()
@@ -127,7 +127,7 @@ class Command(BaseCommand):
                 )
                 ingredients.save()
 
-        with open("../backend/data/wishlist.csv") as file:
+        with open("data/wishlist.csv") as file:
             reader = csv.reader(file, delimiter=";")
             next(reader)
             Wishlist.objects.all().delete()
@@ -140,7 +140,7 @@ class Command(BaseCommand):
                 )
                 wishlist.save()
 
-        with open("../backend/data/cart.csv") as file:
+        with open("data/cart.csv") as file:
             reader = csv.reader(file, delimiter=";")
             next(reader)
             Cart.objects.all().delete()
