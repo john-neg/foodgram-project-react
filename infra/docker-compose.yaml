@@ -7,9 +7,7 @@ services:
     env_file:
       - ./.env
   frontend:
-    build:
-      context: ../frontend
-      dockerfile: Dockerfile
+    image: johnneg/foodgram_project_react_frontend:latest
     volumes:
       - ../frontend/:/app/result_build/
   web:
