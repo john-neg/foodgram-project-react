@@ -55,13 +55,6 @@ jobs:
     runs-on: ubuntu-latest
 #    needs: build_and_push_to_docker_hub
     steps:
-      - name: Run a multi-line script
-        run: |
-          ls
-          mkdir ../build
-          ls
-          cp -TR ../infra/ ../build
-          tar -cvf deploy.tar ../build/
       - name: copy config files to remote server
         uses: appleboy/scp-action@master
         with:
@@ -69,8 +62,8 @@ jobs:
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.SSH_KEY }}
           overwrite: 'true'
-          source: "deploy.tar"
-          target: ""
+          source: "./infra"
+          target: ${{ secrets.COPY_TO }}
       - name: executing remote ssh commands to deploy
         uses: appleboy/ssh-action@master
         with:
