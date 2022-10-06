@@ -58,7 +58,7 @@ jobs:
       - name: Run a multi-line script
         run: |
           mkdir ../build
-          cp -TR infra/ ../build
+          cp -TR /infra/ ../build
           tar -cvf deploy.tar ../build/
       - name: copy config files to remote server
         uses: appleboy/scp-action@master
