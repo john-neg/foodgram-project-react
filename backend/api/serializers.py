@@ -5,9 +5,9 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
 
-from recipes.models import (Cart, Ingredients, RecipeIngredients, Recipes,
-                            Tags, Wishlist)
-from users.serializers import CustomUserSerializer
+from ..recipes.models import (Cart, Ingredients, RecipeIngredients, Recipes,
+                              Tags, Wishlist)
+from ..users.serializers import CustomUserSerializer
 
 
 class Base64ImageField(serializers.ImageField):

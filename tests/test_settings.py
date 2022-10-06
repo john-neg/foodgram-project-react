@@ -1,4 +1,4 @@
-from backend import settings
+from backend.backend import settings
 
 
 class TestSettings:
