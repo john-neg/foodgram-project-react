@@ -4,11 +4,11 @@ import shutil
 from django.core.management import BaseCommand
 from django.shortcuts import get_object_or_404
 
-from ....backend import settings
-from ....recipes.models import (Cart, Ingredients, MeasureUnits,
-                                RecipeIngredients, Recipes, RecipeTags, Tags,
-                                Wishlist)
-from ....users.models import Follow, User
+from backend import settings
+from recipes.models import (Cart, Ingredients, MeasureUnits,
+                            RecipeIngredients, Recipes, RecipeTags, Tags,
+                            Wishlist)
+from users.models import Follow, User
 
 
 class Command(BaseCommand):
