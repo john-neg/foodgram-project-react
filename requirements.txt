@@ -3,3 +3,4 @@ djangorestframework==3.14.0
 django-filter==22.1
 djoser==2.1.0
 python-dotenv==0.21.0
+reportlab==3.6.11

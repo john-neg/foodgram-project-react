@@ -1,9 +1,12 @@
 import csv
+import shutil
 
 from django.core.management import BaseCommand
 from django.shortcuts import get_object_or_404
 
-from recipes.models import Ingredients, MeasureUnits, Tags
+from backend import settings
+from recipes.models import (Cart, Ingredients, MeasureUnits, RecipeIngredients,
+                            Recipes, RecipeTags, Tags, Wishlist)
 from users.models import Follow, User
 
 
@@ -12,8 +15,8 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
-        with open("../data/users.csv") as file:
-            reader = csv.reader(file)
+        with open("../backend/data/users.csv") as file:
+            reader = csv.reader(file, delimiter=";")
             next(reader)
             User.objects.all().delete()
             print("Загружаю данные в Users")
@@ -31,8 +34,8 @@ class Command(BaseCommand):
                 user.set_password(row[5])
                 user.save()
 
-        with open("../data/follow.csv") as file:
-            reader = csv.reader(file)
+        with open("../backend/data/follow.csv") as file:
+            reader = csv.reader(file, delimiter=";")
             next(reader)
             Follow.objects.all().delete()
             print("Загружаю данные в Follow")
@@ -44,22 +47,24 @@ class Command(BaseCommand):
                 )
                 follow.save()
 
-        with open("../data/ingredients.csv") as file:
+        with open("../backend/data/ingredients.csv") as file:
             reader = csv.reader(file)
             Ingredients.objects.all().delete()
             MeasureUnits.objects.all().delete()
             print("Загружаю данные в Ingredients и MeasureUnits")
-            for row in reader:
+            for count, row in enumerate(reader):
                 measurement_unit, _ = MeasureUnits.objects.get_or_create(
                     name=row[-1],
                 )
                 ingredient = Ingredients(
-                    name=row[0], measurement_unit_id=measurement_unit.id
+                    id=count + 1,
+                    name=row[0],
+                    measurement_unit_id=measurement_unit.id,
                 )
                 ingredient.save()
 
-        with open("../data/tags.csv") as file:
-            reader = csv.reader(file)
+        with open("../backend/data/tags.csv") as file:
+            reader = csv.reader(file, delimiter=";")
             next(reader)
             Tags.objects.all().delete()
             print("Загружаю данные в Tags")
@@ -71,5 +76,80 @@ class Command(BaseCommand):
                     slug=row[3],
                 )
                 tag.save()
+
+        with open("../backend/data/recipes.csv") as file:
+            reader = csv.reader(file, delimiter=";")
+            next(reader)
+            Recipes.objects.all().delete()
+            print("Загружаю данные в Recipes")
+            for row in reader:
+                recipes = Recipes(
+                    id=row[0],
+                    name=row[1],
+                    image=row[2],
+                    text=row[3],
+                    cooking_time=row[4],
+                    author_id=row[5],
+                )
+                recipes.save()
+
+        shutil.rmtree(settings.MEDIA_ROOT + "/images", ignore_errors=True)
+        shutil.copytree(
+            "../backend/data/images/",
+            settings.MEDIA_ROOT + "/images",
+        )
+
+        with open("../backend/data/recipetags.csv") as file:
+            reader = csv.reader(file, delimiter=";")
+            next(reader)
+            RecipeTags.objects.all().delete()
+            print("Загружаю данные в RecipeTags")
+            for row in reader:
+                tags = RecipeTags(
+                    id=row[0],
+                    recipe_id=row[1],
+                    tag_id=row[2],
+                )
+                tags.save()
+
+        with open("../backend/data/recipeingredients.csv") as file:
+            reader = csv.reader(file, delimiter=";")
+            next(reader)
+            RecipeIngredients.objects.all().delete()
+            print("Загружаю данные в RecipeIngredients")
+            for row in reader:
+                ingredients = RecipeIngredients(
+                    id=row[0],
+                    recipe_id=row[1],
+                    ingredient_id=row[2],
+                    amount=row[3],
+                )
+                ingredients.save()
+
+        with open("../backend/data/wishlist.csv") as file:
+            reader = csv.reader(file, delimiter=";")
+            next(reader)
+            Wishlist.objects.all().delete()
+            print("Загружаю данные в Wishlist")
+            for row in reader:
+                wishlist = Wishlist(
+                    id=row[0],
+                    recipe_id=row[1],
+                    user_id=row[2],
+                )
+                wishlist.save()
+
+        with open("../backend/data/cart.csv") as file:
+            reader = csv.reader(file, delimiter=";")
+            next(reader)
+            Cart.objects.all().delete()
+            print("Загружаю данные в Cart")
+            for row in reader:
+                cart = Cart(
+                    id=row[0],
+                    recipe_id=row[1],
+                    user_id=row[2],
+                )
+                cart.save()
 
         print("Данные успешно загружены")

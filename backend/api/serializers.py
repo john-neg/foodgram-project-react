@@ -139,7 +139,7 @@ class RecipesSerializer(serializers.ModelSerializer):
                     "должно быть положительным числом"
                 )
             checked_ingredients.append(
-                {"id": ingredient.get("id"), "amount": amount}
+                {"id": ingredient.get("id"), "amount": amount},
             )
 
         data["name"] = name.capitalize()
@@ -188,7 +188,7 @@ class RecipesSerializer(serializers.ModelSerializer):
 
 
 class RecipesShortSerializer(RecipesSerializer):
-    """Сериализатор для модели Recipes."""
+    """Сериализатор для сокращенного вывода данных модели Recipes."""
 
     class Meta:
         model = Recipes
@@ -210,26 +210,25 @@ class WishlistSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         user = self.context["request"].user
-        recipe = data.get("wishlist_recipe")
-        if Wishlist.objects.filter(user_id=user.id, recipe_id=recipe).exists():
+        recipe = data.get("recipe")
+        if self.Meta.model.objects.filter(
+            user_id=user.id,
+            recipe_id=recipe,
+        ).exists():
             raise serializers.ValidationError(
-                "Данный рецепт уже добавлен в избранное"
+                f"Данный рецепт уже добавлен в {self.Meta.model.__name__}"
             )
         return data
 
+    def to_representation(self, instance):
+        request = self.context.get("request")
+        context = {"request": request}
+        return RecipesShortSerializer(instance.recipe, context=context).data
 
-class CartSerializer(serializers.ModelSerializer):
+
+class CartSerializer(WishlistSerializer):
     """Сериализатор для модели Cart."""
 
     class Meta:
         model = Cart
         fields = ("id", "user", "recipe")
-
-    def validate(self, data):
-        user = self.context["request"].user
-        recipe = data.get("cart_recipe")
-        if Cart.objects.filter(user_id=user.id, recipe_id=recipe).exists():
-            raise serializers.ValidationError(
-                "Данный рецепт уже добавлен в корзину"
-            )
-        return data

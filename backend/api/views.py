@@ -1,16 +1,20 @@
+from django.db.models import Sum
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.status import HTTP_400_BAD_REQUEST
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
-from recipes.models import Cart, Ingredients, Recipes, Tags, Wishlist
+from recipes.models import (Cart, Ingredients, RecipeIngredients, Recipes,
+                            Tags, Wishlist)
 
 from .filters import IngredientsSearchFilter, RecipesFilter
 from .pagination import CustomPageNumberPagination
 from .permissions import AdminOrAuthorOrReadOnly
+from .reports import cart_report
 from .serializers import (CartSerializer, IngredientsSerializer,
                           RecipesSerializer, TagsSerializer,
                           WishlistSerializer)
@@ -93,3 +97,27 @@ class RecipesViewSet(ModelViewSet):
             pk=pk,
             model=Cart,
         )
+
+    @action(
+        methods=("GET",),
+        permission_classes=(IsAuthenticated,),
+        detail=False,
+    )
+    def download_shopping_cart(self, request):
+
+        user = request.user
+        if not user.cart_user.exists():
+            return Response(status=HTTP_400_BAD_REQUEST)
+        ingredients = (
+            RecipeIngredients.objects.filter(
+                recipe__cart_recipe__user=request.user,
+            )
+            .values_list(
+                "ingredient__name",
+                "ingredient__measurement_unit__name",
+            )
+            .annotate(amount=Sum("amount"))
+            .order_by("ingredient__name")
+        )
+
+        return cart_report(ingredients)
