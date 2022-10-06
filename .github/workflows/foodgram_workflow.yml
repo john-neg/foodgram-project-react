@@ -61,7 +61,7 @@ jobs:
           local: infra/
           remote: ${{ secrets.COPY_TO }}
           host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
+          username: ${{ secrets.USER }}
           privateKey: ${{secrets.SSH_KEY}}
       - name: executing remote ssh commands to deploy
         uses: appleboy/ssh-action@master
