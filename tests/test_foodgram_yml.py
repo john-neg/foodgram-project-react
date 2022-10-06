@@ -10,10 +10,10 @@ class TestWorkflow:
         backend_basename = 'foodgram_workflow'
 
         yaml = f'{backend_basename}.yaml'
-        is_yaml = yaml in os.listdir(root_dir)
+        is_yaml = yaml in os.listdir(os.path.join(root_dir, ".github", "workflows"))
 
         yml = f'{backend_basename}.yml'
-        is_yml = yml in os.listdir(root_dir)
+        is_yml = yml in os.listdir(os.path.join(root_dir, ".github", "workflows"))
 
         if not is_yaml and not is_yml:
             assert False, (
@@ -32,7 +32,7 @@ class TestWorkflow:
         filename = yaml if is_yaml else yml
 
         try:
-            with open(f'{os.path.join(root_dir, filename)}', 'r') as f:
+            with open(f'{os.path.join(root_dir, ".github", "workflows", filename)}', 'r') as f:
                 foodgram = f.read()
         except FileNotFoundError:
             assert False, f'Проверьте, что добавили файл {filename} в каталог {root_dir} для проверки'
