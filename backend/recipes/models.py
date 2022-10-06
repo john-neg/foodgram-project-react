@@ -37,7 +37,7 @@ class MeasureUnits(models.Model):
 class Ingredients(models.Model):
     """Модель для ингредиентов."""
 
-    name = models.CharField("Название", max_length=50)
+    name = models.CharField("Название", max_length=100)
     measurement_unit = models.ForeignKey(
         MeasureUnits,
         null=True,
