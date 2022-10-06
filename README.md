@@ -65,7 +65,7 @@ docker compose exec web python manage.py migrate
 ### Загрузка данных в БД
 
 ```sh
-docker compose exec web python manage.py loaddata data/db.json
+docker compose exec web python manage.py loaddata data/dump.json
 
 ```
 
@@ -85,8 +85,6 @@ docker compose exec web python manage.py collectstatic --no-input
 ```sh
 docker compose exec web cp -r data/images/ media/
 ```
-
-
 
 ## Author info:
 Evgeny Semenov
