@@ -1,4 +1,6 @@
+from colorfield.fields import ColorField
 from django.contrib.auth import get_user_model
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 User = get_user_model()
@@ -8,7 +10,7 @@ class Tags(models.Model):
     """Модель для тегов."""
 
     name = models.CharField("Имя", max_length=30)
-    color = models.CharField("Цвет", max_length=7)
+    color = ColorField("Цвет", default='#FF0000')
     slug = models.SlugField(max_length=10, unique=True)
 
     class Meta:
@@ -104,9 +106,10 @@ class RecipeIngredients(models.Model):
     ingredient = models.ForeignKey(Ingredients, on_delete=models.CASCADE)
     amount = models.PositiveSmallIntegerField(
         "Количество",
-        # validators=(
-        #     MinValueValidator(1, message='Минимальное количество - 1')
-        # ),
+        validators=(
+            MinValueValidator(1, message='Минимальное количество - 1'),
+            MaxValueValidator(32767, message='Максимальное количество - 32767')
+        ),
     )
 
     class Meta:
@@ -194,4 +197,4 @@ class Cart(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.user} добавил {self.recipe} в список покупок"
+        return f"{self.user.name} добавил {self.recipe.name} в список покупок"

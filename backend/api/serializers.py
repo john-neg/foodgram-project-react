@@ -1,12 +1,12 @@
 import base64
 
 from django.core.files.base import ContentFile
-
-from recipes.models import (Cart, Ingredients, RecipeIngredients, Recipes,
-                            Tags, Wishlist)
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
+
+from recipes.models import (Cart, Ingredients, RecipeIngredients, Recipes,
+                            Tags, Wishlist)
 from users.serializers import CustomUserSerializer
 
 
@@ -17,7 +17,7 @@ class Base64ImageField(serializers.ImageField):
         if isinstance(data, str) and data.startswith("data:image"):
             img_format, img_str = data.split(";base64,")
             ext = img_format.split("/")[-1]
-            data = ContentFile(base64.b64decode(img_str), name="temp." + ext)
+            data = ContentFile(base64.b64decode(img_str), name=f"temp.{ext}")
 
         return super().to_internal_value(data)
 
@@ -116,16 +116,36 @@ class RecipesSerializer(serializers.ModelSerializer):
         tags = self.initial_data.get("tags")
         ingredients = self.initial_data.get("ingredients")
 
-        for parameter in (tags, ingredients):
-            if not (parameter, isinstance(parameter, list)):
-                raise ValidationError(
-                    f"Параметр '{parameter}' не является списком (list)"
-                )
+        data["name"] = name.capitalize()
+        data["tags"] = self.validate_tags(tags)
+        data["ingredients"] = self.validate_ingredients(ingredients)
+        data["author"] = self.context.get("request").user
+        return data
 
+    def validate_tags(self, tags):
+        """Проверяет теги."""
+
+        if not isinstance(tags, list):
+            raise ValidationError(
+                "Параметр 'tags' не является списком (list)"
+            )
+        validated_tags = []
         for tag in tags:
             if not Tags.objects.filter(id=tag):
                 raise ValidationError(f"Тег {tag} не существует")
+            if tag not in validated_tags:
+                validated_tags.append(tag)
+            else:
+                raise ValidationError(f"Тег {tag} уже был передан")
+        return validated_tags
 
+    def validate_ingredients(self, ingredients):
+        """Проверяет ингредиенты."""
+
+        if not isinstance(ingredients, list):
+            raise ValidationError(
+                "Параметр 'ingredients' не является списком (list)"
+            )
         checked_ingredients = []
         for ingredient in ingredients:
             if not Ingredients.objects.filter(id=ingredient.get("id")):
@@ -133,20 +153,15 @@ class RecipesSerializer(serializers.ModelSerializer):
                     f"Ингредиент с 'id' {ingredient.get('id')} не существует"
                 )
             amount = ingredient.get("amount")
-            if not str(amount).isdecimal() or int(amount) <= 0:
+            if not str(amount).isdecimal() or not 0 >= int(amount) > 32767:
                 raise ValidationError(
-                    f"Значение amount - '{ingredient.get('amount')}' "
-                    "должно быть положительным числом"
+                    f"Значение amount '{ingredient.get('amount')}' "
+                    "должно быть положительным числом от 1 до 32767"
                 )
             checked_ingredients.append(
                 {"id": ingredient.get("id"), "amount": amount},
             )
-
-        data["name"] = name.capitalize()
-        data["tags"] = tags
-        data["ingredients"] = ingredients
-        data["author"] = self.context.get("request").user
-        return data
+        return checked_ingredients
 
     @staticmethod
     def create_tags(tags, recipe):
