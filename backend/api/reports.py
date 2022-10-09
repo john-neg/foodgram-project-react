@@ -7,6 +7,8 @@ from reportlab.pdfgen.canvas import Canvas
 
 from django.http import FileResponse
 
+from .func import fix_morph
+
 
 def cart_report(response):
     """Генерирует отчет - список ингредиентов для покупки."""
@@ -19,11 +21,13 @@ def cart_report(response):
     canvas.setFont("FreeSans", 14)
     start_pos = 750
     for count, ingredient in enumerate(response):
+        ingredient_amount = ingredient[2]
+        ingredient_type = ingredient[1]
         canvas.drawString(
             50,
             start_pos,
-            f"{count + 1}. {ingredient[0].capitalize()} - "
-            f"{ingredient[2]} {ingredient[1]}",
+            f"{count + 1}. {ingredient[0].capitalize()} - {ingredient_amount} "
+            f"{fix_morph(ingredient_type, ingredient_amount)}",
         )
         start_pos -= 15
     canvas.showPage()
