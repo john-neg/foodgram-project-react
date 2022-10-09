@@ -153,7 +153,7 @@ class RecipesSerializer(serializers.ModelSerializer):
                     f"Ингредиент с 'id' {ingredient.get('id')} не существует"
                 )
             amount = ingredient.get("amount")
-            if not str(amount).isdecimal() or not 0 >= int(amount) > 32767:
+            if not str(amount).isdecimal() or not 0 <= int(amount) < 32767:
                 raise ValidationError(
                     f"Значение amount '{ingredient.get('amount')}' "
                     "должно быть положительным числом от 1 до 32767"
